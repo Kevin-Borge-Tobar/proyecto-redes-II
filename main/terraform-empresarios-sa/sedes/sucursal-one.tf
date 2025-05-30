@@ -1,79 +1,64 @@
 # ----------------------------------------
-# Sucursal Nacional 1 - "sucursal-one.tf"
+# Sucursal Nacional 1
 # ----------------------------------------
 
-# VPC de la Sucursal 1
 resource "aws_vpc" "sucursal_1" {
   cidr_block           = "10.10.0.0/16"
   enable_dns_hostnames = true
   tags = { Name = "VPC-Sucursal-1" }
 }
 
-# Internet Gateway para la Sucursal 1
 resource "aws_internet_gateway" "sucursal_1_igw" {
   vpc_id = aws_vpc.sucursal_1.id
   tags   = { Name = "Sucursal-1-IGW" }
 }
 
-# Subredes privadas por departamento en la Sucursal 1
-resource "aws_subnet" "sucursal_1_gerencia" {
+# ---------- SUBREDES PUBLICAS ----------
+resource "aws_subnet" "sucursal_1_public_az1" {
+  vpc_id                  = aws_vpc.sucursal_1.id
+  cidr_block              = "10.10.200.0/24"
+  availability_zone       = "us-east-1a"
+  map_public_ip_on_launch = true
+  tags = { Name = "Sucursal-1-Public-AZ1" }
+}
+resource "aws_subnet" "sucursal_1_public_az2" {
+  vpc_id                  = aws_vpc.sucursal_1.id
+  cidr_block              = "10.10.201.0/24"
+  availability_zone       = "us-east-1b"
+  map_public_ip_on_launch = true
+  tags = { Name = "Sucursal-1-Public-AZ2" }
+}
+
+# ---------- SUBREDES PRIVADAS ----------
+resource "aws_subnet" "sucursal_1_gerencia_az1" {
   vpc_id            = aws_vpc.sucursal_1.id
   cidr_block        = "10.10.10.0/24"
   availability_zone = "us-east-1a"
-  tags = { Name = "Sucursal-1-Gerencia" }
+  tags = { Name = "Sucursal-1-Gerencia-AZ1" }
 }
-resource "aws_subnet" "sucursal_1_rh" {
+resource "aws_subnet" "sucursal_1_gerencia_az2" {
   vpc_id            = aws_vpc.sucursal_1.id
-  cidr_block        = "10.10.20.0/24"
-  availability_zone = "us-east-1a"
-  tags = { Name = "Sucursal-1-RH" }
-}
-resource "aws_subnet" "sucursal_1_informatica" {
-  vpc_id            = aws_vpc.sucursal_1.id
-  cidr_block        = "10.10.30.0/24"
-  availability_zone = "us-east-1a"
-  tags = { Name = "Sucursal-1-Informatica" }
-}
-resource "aws_subnet" "sucursal_1_contabilidad" {
-  vpc_id            = aws_vpc.sucursal_1.id
-  cidr_block        = "10.10.40.0/24"
-  availability_zone = "us-east-1a"
-  tags = { Name = "Sucursal-1-Contabilidad" }
-}
-resource "aws_subnet" "sucursal_1_ventas" {
-  vpc_id            = aws_vpc.sucursal_1.id
-  cidr_block        = "10.10.50.0/24"
-  availability_zone = "us-east-1a"
-  tags = { Name = "Sucursal-1-Ventas" }
+  cidr_block        = "10.10.11.0/24"
+  availability_zone = "us-east-1b"
+  tags = { Name = "Sucursal-1-Gerencia-AZ2" }
 }
 
-# (Opcional: Subred para periféricos de la sucursal)
-resource "aws_subnet" "sucursal_1_perifericos" {
-  vpc_id            = aws_vpc.sucursal_1.id
-  cidr_block        = "10.10.100.0/24"
-  availability_zone = "us-east-1c"
-  tags = { Name = "Sucursal-1-Perifericos" }
-}
-
-# Tabla de rutas de la Sucursal 1
-resource "aws_route_table" "sucursal_1_rt" {
+# ---------- ROUTE TABLES ----------
+resource "aws_route_table" "sucursal_1_private_rt" {
   vpc_id = aws_vpc.sucursal_1.id
-  tags   = { Name = "Sucursal-1-RT" }
+  tags   = { Name = "Sucursal-1-Private-RT" }
 }
 
-resource "aws_route" "sucursal_1_internet" {
-  route_table_id         = aws_route_table.sucursal_1_rt.id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.sucursal_1_igw.id
+resource "aws_route_table_association" "s1_gerencia_az1_assoc" {
+  subnet_id      = aws_subnet.sucursal_1_gerencia_az1.id
+  route_table_id = aws_route_table.sucursal_1_private_rt.id
+}
+resource "aws_route_table_association" "s1_gerencia_az2_assoc" {
+  subnet_id      = aws_subnet.sucursal_1_gerencia_az2.id
+  route_table_id = aws_route_table.sucursal_1_private_rt.id
 }
 
-# Asocia la tabla de rutas a la subred de informática (puedes asociar a otras si necesitas)
-resource "aws_route_table_association" "sucursal_1_informatica_assoc" {
-  subnet_id      = aws_subnet.sucursal_1_informatica.id
-  route_table_id = aws_route_table.sucursal_1_rt.id
-}
-
-# Security Group: solo permite SSH desde la sede central (ajusta el CIDR si lo parametrizas)
+# ---------- SECURITY GROUPS ----------
 resource "aws_security_group" "sucursal_1_sg" {
   name        = "Sucursal-1-SG"
   description = "Permite SSH solo desde la sede central"
@@ -83,7 +68,7 @@ resource "aws_security_group" "sucursal_1_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"] # <--- CIDR de la sede central
+    cidr_blocks = ["10.0.0.0/16"]
   }
   egress {
     from_port   = 0
@@ -94,11 +79,22 @@ resource "aws_security_group" "sucursal_1_sg" {
   tags = { Name = "Sucursal-1-SG" }
 }
 
-# Instancia EC2 en Informática (puedes agregar más por cada subred/departamento)
-resource "aws_instance" "sucursal_1_informatica_ec2" {
+# ---------- INSTANCIAS PRIVADAS ----------
+resource "aws_instance" "sucursal_1_gerencia_ec2_az1" {
   ami                    = "ami-0c94855ba95c71c99"
-  instance_type          = "t3.micro"
-  subnet_id              = aws_subnet.sucursal_1_informatica.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.sucursal_1_gerencia_az1.id
   vpc_security_group_ids = [aws_security_group.sucursal_1_sg.id]
-  tags = { Name = "Sucursal-1-Informatica-EC2" }
+  key_name               = "bastion_key"
+  tags = { Name = "Sucursal-1-Gerencia-EC2-AZ1" }
+}
+
+resource "aws_instance" "sucursal_1_gerencia_ec2_az2" {
+  ami                         = "ami-0c94855ba95c71c99"
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.sucursal_1_gerencia_az2.id
+  vpc_security_group_ids      = [aws_security_group.sucursal_1_sg.id]
+  key_name                    = "bastion_key"
+  associate_public_ip_address = true
+  tags = { Name = "Sucursal-1-Gerencia-EC2-AZ2" }
 }

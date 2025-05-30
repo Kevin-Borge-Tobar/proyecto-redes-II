@@ -1,0 +1,102 @@
+##############################################
+# HISTÓRICO DE COMANDOS PARA SERVIDOR VPN
+# EmpresariosSA - Generación de Certificados
+##############################################
+
+# === Requisitos previos:
+# - Tener los archivos ca.crt y ca.key generados previamente (CA de la empresa).
+# - Ejecutar estos comandos en la carpeta donde tengas tu CA.
+
+# ------------------------------------------------------------------------------------------------------------------
+# Generar certificados y llaves para el servidor VPN
+# ------------------------------------------------------------------------------------------------------------------
+
+# 1. Generar clave privada para el servidor
+openssl genrsa -out server.key 2048
+
+# 2. Crear solicitud de firma de certificado (CSR) para el servidor
+openssl req -new -key server.key -out server.csr -subj "/CN=EmpresariosSA-VPN-Server"
+
+# 3. Firmar el CSR con la CA para obtener el certificado del servidor
+openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365 -sha256
+
+# -----------------------------------------------------------------------------------------------------------------
+# Archivos generados:
+# - server.key (clave privada del servidor, NECESARIA para importar en AWS ACM)
+# - server.csr (solicitud de firma, se puede borrar después)
+# - server.crt (certificado firmado por la CA, NECESARIO para importar en AWS ACM)
+# - ca.crt (certificado de la CA, se usa como "Certificate chain" en AWS ACM)
+# ------------------------------------------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------------------------------------------
+# Recordatorio: Importar en AWS ACM
+# ------------------------------------------------------------------------------------------------------------------
+# Al importar el certificado en ACM, pega:
+# - En "Certificate body":     el contenido de server.crt
+# - En "Certificate private key": el contenido de server.key
+# - En "Certificate chain":    el contenido de ca.crt (opcional pero recomendado)
+#
+# Pega cada archivo entre las etiquetas -----BEGIN ...----- y -----END ...----- correspondientes.
+
+##############################################
+
+
+##############################################
+# PASOS PARA GENERAR UN NUEVO CLIENTE VPN
+# EmpresariosSA - Cliente OpenVPN
+##############################################
+
+# === Prerrequisitos:
+# - Tener los archivos ca.crt y ca.key originales (de tu CA).
+# - Tener el archivo .ovpn base descargado desde la consola de AWS Client VPN.
+
+# ----------------------------------------------------------------------------------------------------------
+# 1. Generar la clave privada para el nuevo cliente
+openssl genrsa -out client2.key 2048
+
+# 2. Crear la solicitud de firma de certificado (CSR) para el nuevo cliente
+openssl req -new -key client2.key -out client2.csr -subj "/CN=EmpresariosSA-client2"
+
+# 3. Firmar la CSR con la CA para obtener el certificado de cliente
+openssl x509 -req -in client2.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client2.crt -days 365 -sha256
+
+# ------------------------------------------------------------------------------------------------------------
+# 4. Preparar el archivo .ovpn para el cliente:
+# - Abrir el archivo .ovpn base con un editor de texto.
+# - Pegar el contenido de cada archivo generado en su respectivo bloque:
+#
+# <ca>
+# (Pega aquí TODO el contenido de ca.crt)
+# </ca>
+# <cert>
+# (Pega aquí TODO el contenido de client2.crt)
+# </cert>
+# <key>
+# (Pega aquí TODO el contenido de client2.key)
+# </key>
+#
+# - Guardar el archivo como client2.ovpn o un nombre identificable.
+
+# ------------------------------------------------------------------------------------------------------------------
+# 5. Entregar el archivo .ovpn al usuario
+# - El usuario solo necesita este archivo para conectarse vía OpenVPN.
+
+##############################################
+
+##############################################
+# PASOS PARA GENERAR UN CLIENTE NUEVO: admin-1
+##############################################
+
+# 1. Generar la clave privada para el nuevo cliente (admin-1)
+openssl genrsa -out admin-1.key 2048
+
+# 2. Crear la solicitud de firma de certificado (CSR) para admin-1
+openssl req -new -key admin-1.key -out admin-1.csr -subj "/CN=EmpresariosSA-admin-1"
+
+# 3. Firmar la CSR con la CA para obtener el certificado de admin-1
+openssl x509 -req -in admin-1.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out admin-1.crt -days 365 -sha256
+
+# --------------------------------------
+# Después, en el archivo .ovpn:
+# - Cambia los bloques <cert> y <key> por el contenido de admin-1.crt y admin-1.key
+# --------------------------------------

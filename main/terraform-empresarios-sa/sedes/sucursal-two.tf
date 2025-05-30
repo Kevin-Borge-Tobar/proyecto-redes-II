@@ -2,79 +2,141 @@
 # Sucursal Nacional 2 - "sucursal-two.tf"
 # ----------------------------------------
 
-# VPC de la Sucursal 2
 resource "aws_vpc" "sucursal_2" {
   cidr_block           = "10.20.0.0/16"
   enable_dns_hostnames = true
   tags = { Name = "VPC-Sucursal-2" }
 }
 
-# Internet Gateway para la Sucursal 2
 resource "aws_internet_gateway" "sucursal_2_igw" {
   vpc_id = aws_vpc.sucursal_2.id
   tags   = { Name = "Sucursal-2-IGW" }
 }
 
-# Subredes privadas por departamento en la Sucursal 2
-resource "aws_subnet" "sucursal_2_gerencia" {
+# SUBREDES PUBLICAS
+resource "aws_subnet" "sucursal_2_public_az1" {
+  vpc_id                  = aws_vpc.sucursal_2.id
+  cidr_block              = "10.20.200.0/24"
+  availability_zone       = "us-east-1a"
+  map_public_ip_on_launch = true
+  tags = { Name = "Sucursal-2-Public-AZ1" }
+}
+resource "aws_subnet" "sucursal_2_public_az2" {
+  vpc_id                  = aws_vpc.sucursal_2.id
+  cidr_block              = "10.20.201.0/24"
+  availability_zone       = "us-east-1b"
+  map_public_ip_on_launch = true
+  tags = { Name = "Sucursal-2-Public-AZ2" }
+}
+
+# SUBREDES PRIVADAS POR DEPARTAMENTO (HA)
+resource "aws_subnet" "sucursal_2_gerencia_az1" {
   vpc_id            = aws_vpc.sucursal_2.id
   cidr_block        = "10.20.10.0/24"
   availability_zone = "us-east-1a"
-  tags = { Name = "Sucursal-2-Gerencia" }
+  tags = { Name = "Sucursal-2-Gerencia-AZ1" }
 }
-resource "aws_subnet" "sucursal_2_rh" {
+resource "aws_subnet" "sucursal_2_gerencia_az2" {
+  vpc_id            = aws_vpc.sucursal_2.id
+  cidr_block        = "10.20.11.0/24"
+  availability_zone = "us-east-1b"
+  tags = { Name = "Sucursal-2-Gerencia-AZ2" }
+}
+resource "aws_subnet" "sucursal_2_rh_az1" {
   vpc_id            = aws_vpc.sucursal_2.id
   cidr_block        = "10.20.20.0/24"
   availability_zone = "us-east-1a"
-  tags = { Name = "Sucursal-2-RH" }
+  tags = { Name = "Sucursal-2-RH-AZ1" }
 }
-resource "aws_subnet" "sucursal_2_informatica" {
+resource "aws_subnet" "sucursal_2_rh_az2" {
+  vpc_id            = aws_vpc.sucursal_2.id
+  cidr_block        = "10.20.21.0/24"
+  availability_zone = "us-east-1b"
+  tags = { Name = "Sucursal-2-RH-AZ2" }
+}
+resource "aws_subnet" "sucursal_2_informatica_az1" {
   vpc_id            = aws_vpc.sucursal_2.id
   cidr_block        = "10.20.30.0/24"
   availability_zone = "us-east-1a"
-  tags = { Name = "Sucursal-2-Informatica" }
+  tags = { Name = "Sucursal-2-Informatica-AZ1" }
 }
-resource "aws_subnet" "sucursal_2_contabilidad" {
+resource "aws_subnet" "sucursal_2_informatica_az2" {
+  vpc_id            = aws_vpc.sucursal_2.id
+  cidr_block        = "10.20.31.0/24"
+  availability_zone = "us-east-1b"
+  tags = { Name = "Sucursal-2-Informatica-AZ2" }
+}
+resource "aws_subnet" "sucursal_2_contabilidad_az1" {
   vpc_id            = aws_vpc.sucursal_2.id
   cidr_block        = "10.20.40.0/24"
   availability_zone = "us-east-1a"
-  tags = { Name = "Sucursal-2-Contabilidad" }
+  tags = { Name = "Sucursal-2-Contabilidad-AZ1" }
 }
-resource "aws_subnet" "sucursal_2_ventas" {
+resource "aws_subnet" "sucursal_2_contabilidad_az2" {
+  vpc_id            = aws_vpc.sucursal_2.id
+  cidr_block        = "10.20.41.0/24"
+  availability_zone = "us-east-1b"
+  tags = { Name = "Sucursal-2-Contabilidad-AZ2" }
+}
+resource "aws_subnet" "sucursal_2_ventas_az1" {
   vpc_id            = aws_vpc.sucursal_2.id
   cidr_block        = "10.20.50.0/24"
   availability_zone = "us-east-1a"
-  tags = { Name = "Sucursal-2-Ventas" }
+  tags = { Name = "Sucursal-2-Ventas-AZ1" }
 }
-
-# (Opcional: Subred para periféricos de la sucursal)
-resource "aws_subnet" "sucursal_2_perifericos" {
+resource "aws_subnet" "sucursal_2_ventas_az2" {
+  vpc_id            = aws_vpc.sucursal_2.id
+  cidr_block        = "10.20.51.0/24"
+  availability_zone = "us-east-1b"
+  tags = { Name = "Sucursal-2-Ventas-AZ2" }
+}
+resource "aws_subnet" "sucursal_2_perifericos_az1" {
   vpc_id            = aws_vpc.sucursal_2.id
   cidr_block        = "10.20.100.0/24"
-  availability_zone = "us-east-1c"
-  tags = { Name = "Sucursal-2-Perifericos" }
+  availability_zone = "us-east-1a"
+  tags = { Name = "Sucursal-2-Perifericos-AZ1" }
+}
+resource "aws_subnet" "sucursal_2_perifericos_az2" {
+  vpc_id            = aws_vpc.sucursal_2.id
+  cidr_block        = "10.20.101.0/24"
+  availability_zone = "us-east-1b"
+  tags = { Name = "Sucursal-2-Perifericos-AZ2" }
 }
 
-# Tabla de rutas de la Sucursal 2
-resource "aws_route_table" "sucursal_2_rt" {
+# ROUTE TABLES Y ASOCIACIONES
+resource "aws_route_table" "sucursal_2_public_rt" {
   vpc_id = aws_vpc.sucursal_2.id
-  tags   = { Name = "Sucursal-2-RT" }
+  tags   = { Name = "Sucursal-2-Public-RT" }
 }
-
-resource "aws_route" "sucursal_2_internet" {
-  route_table_id         = aws_route_table.sucursal_2_rt.id
+resource "aws_route" "sucursal_2_public_internet_access" {
+  route_table_id         = aws_route_table.sucursal_2_public_rt.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.sucursal_2_igw.id
 }
-
-# Asocia la tabla de rutas a la subred de informática (puedes asociar a otras si necesitas)
-resource "aws_route_table_association" "sucursal_2_informatica_assoc" {
-  subnet_id      = aws_subnet.sucursal_2_informatica.id
-  route_table_id = aws_route_table.sucursal_2_rt.id
+resource "aws_route_table_association" "sucursal_2_public_assoc_az1" {
+  subnet_id      = aws_subnet.sucursal_2_public_az1.id
+  route_table_id = aws_route_table.sucursal_2_public_rt.id
+}
+resource "aws_route_table_association" "sucursal_2_public_assoc_az2" {
+  subnet_id      = aws_subnet.sucursal_2_public_az2.id
+  route_table_id = aws_route_table.sucursal_2_public_rt.id
 }
 
-# Security Group: solo permite SSH desde la sede central (ajusta el CIDR si lo parametrizas)
-resource "aws_security_group" "sucursal_2_sg" {
+resource "aws_route_table" "sucursal_2_private_rt" {
+  vpc_id = aws_vpc.sucursal_2.id
+  tags   = { Name = "Sucursal-2-Private-RT" }
+}
+resource "aws_route_table_association" "sucursal_2_informatica_private_assoc_az1" {
+  subnet_id      = aws_subnet.sucursal_2_informatica_az1.id
+  route_table_id = aws_route_table.sucursal_2_private_rt.id
+}
+resource "aws_route_table_association" "sucursal_2_informatica_private_assoc_az2" {
+  subnet_id      = aws_subnet.sucursal_2_informatica_az2.id
+  route_table_id = aws_route_table.sucursal_2_private_rt.id
+}
+
+# SECURITY GROUP
+resource "aws_security_group" "sucursal_2_private_sg" {
   name        = "Sucursal-2-SG"
   description = "Permite SSH solo desde la sede central"
   vpc_id      = aws_vpc.sucursal_2.id
@@ -83,7 +145,7 @@ resource "aws_security_group" "sucursal_2_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"] # <--- CIDR de la sede central
+    cidr_blocks = ["10.0.0.0/16"]
   }
   egress {
     from_port   = 0
@@ -94,11 +156,90 @@ resource "aws_security_group" "sucursal_2_sg" {
   tags = { Name = "Sucursal-2-SG" }
 }
 
-# Instancia EC2 en Informática (puedes agregar más por cada subred/departamento)
-resource "aws_instance" "sucursal_2_informatica_ec2" {
+# INSTANCIAS PRIVADAS POR DEPARTAMENTO (HA)
+resource "aws_instance" "sucursal_2_gerencia_ec2_az1" {
   ami                    = "ami-0c94855ba95c71c99"
-  instance_type          = "t3.micro"
-  subnet_id              = aws_subnet.sucursal_2_informatica.id
-  vpc_security_group_ids = [aws_security_group.sucursal_2_sg.id]
-  tags = { Name = "Sucursal-2-Informatica-EC2" }
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.sucursal_2_gerencia_az1.id
+  vpc_security_group_ids = [aws_security_group.sucursal_2_private_sg.id]
+  key_name               = "bastion_key"
+  tags = { Name = "Sucursal-2-Gerencia-EC2-AZ1" }
 }
+resource "aws_instance" "sucursal_2_gerencia_ec2_az2" {
+  ami                    = "ami-0c94855ba95c71c99"
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.sucursal_2_gerencia_az2.id
+  vpc_security_group_ids = [aws_security_group.sucursal_2_private_sg.id]
+  key_name               = "bastion_key"
+  tags = { Name = "Sucursal-2-Gerencia-EC2-AZ2" }
+}
+# resource "aws_instance" "sucursal_2_rh_ec2_az1" {
+#   ami                    = "ami-0c94855ba95c71c99"
+#   instance_type          = "t2.micro"
+#   subnet_id              = aws_subnet.sucursal_2_rh_az1.id
+#   vpc_security_group_ids = [aws_security_group.sucursal_2_private_sg.id]
+#   tags = { Name = "Sucursal-2-RH-EC2-AZ1" }
+# }
+# resource "aws_instance" "sucursal_2_rh_ec2_az2" {
+#   ami                    = "ami-0c94855ba95c71c99"
+#   instance_type          = "t2.micro"
+#   subnet_id              = aws_subnet.sucursal_2_rh_az2.id
+#   vpc_security_group_ids = [aws_security_group.sucursal_2_private_sg.id]
+#   tags = { Name = "Sucursal-2-RH-EC2-AZ2" }
+# }
+# resource "aws_instance" "sucursal_2_informatica_ec2_az1" {
+#   ami                    = "ami-0c94855ba95c71c99"
+#   instance_type          = "t2.micro"
+#   subnet_id              = aws_subnet.sucursal_2_informatica_az1.id
+#   vpc_security_group_ids = [aws_security_group.sucursal_2_private_sg.id]
+#   tags = { Name = "Sucursal-2-Informatica-EC2-AZ1" }
+# }
+# resource "aws_instance" "sucursal_2_informatica_ec2_az2" {
+#   ami                    = "ami-0c94855ba95c71c99"
+#   instance_type          = "t2.micro"
+#   subnet_id              = aws_subnet.sucursal_2_informatica_az2.id
+#   vpc_security_group_ids = [aws_security_group.sucursal_2_private_sg.id]
+#   tags = { Name = "Sucursal-2-Informatica-EC2-AZ2" }
+# }
+# resource "aws_instance" "sucursal_2_contabilidad_ec2_az1" {
+#   ami                    = "ami-0c94855ba95c71c99"
+#   instance_type          = "t2.micro"
+#   subnet_id              = aws_subnet.sucursal_2_contabilidad_az1.id
+#   vpc_security_group_ids = [aws_security_group.sucursal_2_private_sg.id]
+#   tags = { Name = "Sucursal-2-Contabilidad-EC2-AZ1" }
+# }
+# resource "aws_instance" "sucursal_2_contabilidad_ec2_az2" {
+#   ami                    = "ami-0c94855ba95c71c99"
+#   instance_type          = "t2.micro"
+#   subnet_id              = aws_subnet.sucursal_2_contabilidad_az2.id
+#   vpc_security_group_ids = [aws_security_group.sucursal_2_private_sg.id]
+#   tags = { Name = "Sucursal-2-Contabilidad-EC2-AZ2" }
+# }
+# resource "aws_instance" "sucursal_2_ventas_ec2_az1" {
+#   ami                    = "ami-0c94855ba95c71c99"
+#   instance_type          = "t2.micro"
+#   subnet_id              = aws_subnet.sucursal_2_ventas_az1.id
+#   vpc_security_group_ids = [aws_security_group.sucursal_2_private_sg.id]
+#   tags = { Name = "Sucursal-2-Ventas-EC2-AZ1" }
+# }
+# resource "aws_instance" "sucursal_2_ventas_ec2_az2" {
+#   ami                    = "ami-0c94855ba95c71c99"
+#   instance_type          = "t2.micro"
+#   subnet_id              = aws_subnet.sucursal_2_ventas_az2.id
+#   vpc_security_group_ids = [aws_security_group.sucursal_2_private_sg.id]
+#   tags = { Name = "Sucursal-2-Ventas-EC2-AZ2" }
+# }
+# resource "aws_instance" "sucursal_2_perifericos_ec2_az1" {
+#   ami                    = "ami-0c94855ba95c71c99"
+#   instance_type          = "t2.micro"
+#   subnet_id              = aws_subnet.sucursal_2_perifericos_az1.id
+#   vpc_security_group_ids = [aws_security_group.sucursal_2_private_sg.id]
+#   tags = { Name = "Sucursal-2-Perifericos-EC2-AZ1" }
+# }
+# resource "aws_instance" "sucursal_2_perifericos_ec2_az2" {
+#   ami                    = "ami-0c94855ba95c71c99"
+#   instance_type          = "t2.micro"
+#   subnet_id              = aws_subnet.sucursal_2_perifericos_az2.id
+#   vpc_security_group_ids = [aws_security_group.sucursal_2_private_sg.id]
+#   tags = { Name = "Sucursal-2-Perifericos-EC2-AZ2" }
+# }
