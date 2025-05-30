@@ -6,14 +6,6 @@ output "vpc_id_sucursal_espana" {
   value = aws_vpc.sucursal_espana.id
 }
 
-# Gerencia
-output "sucursal_espana_gerencia_subnet_az1_id" {
-  value = aws_subnet.sucursal_espana_gerencia_az1.id
-}
-output "sucursal_espana_gerencia_subnet_az2_id" {
-  value = aws_subnet.sucursal_espana_gerencia_az2.id
-}
-
 # # RH
 # output "sucursal_espana_rh_subnet_az1_id" {
 #   value = aws_subnet.sucursal_espana_rh_az1.id

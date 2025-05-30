@@ -101,3 +101,67 @@ resource "aws_route" "central_to_sucursal_1" {
   vpc_peering_connection_id = aws_vpc_peering_connection.central_to_sucursal_1.id
 }
 
+# --- PEERING central <-> sucursal 2 ---
+resource "aws_vpc_peering_connection" "central_to_sucursal_2" {
+  vpc_id        = aws_vpc.sede_central.id
+  peer_vpc_id   = aws_vpc.sucursal_2.id
+  auto_accept   = true
+  tags = {
+    Name = "Central-to-Sucursal-2"
+  }
+}
+
+# --- RUTA en la central para alcanzar la sucursal 2 ---
+resource "aws_route" "central_to_sucursal_2" {
+  route_table_id            = aws_route_table.public_rt.id
+  destination_cidr_block    = aws_vpc.sucursal_2.cidr_block   # "10.20.0.0/16"
+  vpc_peering_connection_id = aws_vpc_peering_connection.central_to_sucursal_2.id
+}
+
+
+# Peering entre la sede central y sucursal USA
+resource "aws_vpc_peering_connection" "central_to_sucursal_usa" {
+  vpc_id        = aws_vpc.sede_central.id
+  peer_vpc_id   = aws_vpc.sucursal_usa.id
+  auto_accept   = true
+  tags = {
+    Name = "Central-to-Sucursal-USA"
+  }
+}
+
+# Ruta en la central para alcanzar Sucursal USA
+resource "aws_route" "central_to_sucursal_usa" {
+  route_table_id            = aws_route_table.public_rt.id
+  destination_cidr_block    = aws_vpc.sucursal_usa.cidr_block   # "10.40.0.0/16"
+  vpc_peering_connection_id = aws_vpc_peering_connection.central_to_sucursal_usa.id
+}
+
+resource "aws_vpc_peering_connection" "central_to_sucursal_espana" {
+  vpc_id        = aws_vpc.sede_central.id
+  peer_vpc_id   = aws_vpc.sucursal_espana.id
+  auto_accept   = true
+  tags = {
+    Name = "Central-to-Sucursal-España"
+  }
+}
+
+resource "aws_route" "central_to_sucursal_espana" {
+  route_table_id            = aws_route_table.public_rt.id
+  destination_cidr_block    = aws_vpc.sucursal_espana.cidr_block   # "10.50.0.0/16"
+  vpc_peering_connection_id = aws_vpc_peering_connection.central_to_sucursal_espana.id
+}
+
+# resource "aws_vpc_peering_connection" "central_to_sucursal_3" {
+#   vpc_id        = aws_vpc.sede_central.id
+#   peer_vpc_id   = aws_vpc.sucursal_3.id
+#   auto_accept   = true
+#   tags = {
+#     Name = "Central-to-Sucursal-3"
+#   }
+# }
+#
+# resource "aws_route" "central_to_sucursal_3" {
+#   route_table_id            = aws_route_table.public_rt.id
+#   destination_cidr_block    = aws_vpc.sucursal_3.cidr_block   # "10.30.0.0/16"
+#   vpc_peering_connection_id = aws_vpc_peering_connection.central_to_sucursal_3.id
+# }

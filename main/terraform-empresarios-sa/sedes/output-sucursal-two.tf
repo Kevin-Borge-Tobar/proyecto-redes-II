@@ -6,12 +6,6 @@ output "vpc_id_sucursal_2" {
   value = aws_vpc.sucursal_2.id
 }
 
-output "sucursal_2_public_az1_subnet_id" {
-  value = aws_subnet.sucursal_2_public_az1.id
-}
-output "sucursal_2_public_az2_subnet_id" {
-  value = aws_subnet.sucursal_2_public_az2.id
-}
 
 # output "sucursal_2_gerencia_az1_subnet_id" {
 #   value = aws_subnet.sucursal_2_gerencia_az1.id
