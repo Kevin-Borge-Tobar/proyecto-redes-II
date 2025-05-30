@@ -110,14 +110,14 @@ resource "aws_security_group" "public_sg" {
 
 resource "aws_security_group" "private_sg" {
   name        = "private-sg"
-  description = "SSH solo desde la VPC central"
+  description = "Permite trafico entre la sede central y sucursal 1"
   vpc_id      = aws_vpc.sede_central.id
 
   ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["10.10.0.0/16"] # Sucursal 1
   }
   egress {
     from_port   = 0
@@ -128,15 +128,7 @@ resource "aws_security_group" "private_sg" {
   tags = { Name = "Private-Access" }
 }
 
-# ---------- VPC PEERING ----------
-resource "aws_vpc_peering_connection" "sucursal_1_to_central" {
-  vpc_id      = aws_vpc.sede_central.id
-  peer_vpc_id = aws_vpc.sucursal_1.id
-  auto_accept = true
-  tags = {
-    Name = "Sucursal-1-to-Sede-Central"
-  }
-}
+
 
 resource "aws_route" "central_to_sucursal_1" {
   route_table_id            = aws_route_table.central_private_rt.id
@@ -164,3 +156,21 @@ resource "aws_instance" "gerencia_ec2_az2" {
   associate_public_ip_address = true
   tags = { Name = "Gerencia-EC2-AZ2" }
 }
+
+
+resource "aws_vpc_peering_connection" "sucursal_1_to_central" {
+  vpc_id        = aws_vpc.sede_central.id
+  peer_vpc_id   = aws_vpc.sucursal_1.id
+  auto_accept   = true
+
+  tags = {
+    Name = "Sucursal-1-to-Sede-Central"
+  }
+}
+
+# resource "aws_route" "central_to_sucursal_1" {
+#   route_table_id            = aws_route_table.central_private_rt.id
+#   destination_cidr_block    = aws_vpc.sucursal_1.cidr_block
+#   vpc_peering_connection_id = aws_vpc_peering_connection.sucursal_1_to_central.id
+# }
+

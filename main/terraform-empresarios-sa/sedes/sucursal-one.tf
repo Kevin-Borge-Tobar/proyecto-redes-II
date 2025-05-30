@@ -61,14 +61,14 @@ resource "aws_route_table_association" "s1_gerencia_az2_assoc" {
 # ---------- SECURITY GROUPS ----------
 resource "aws_security_group" "sucursal_1_sg" {
   name        = "Sucursal-1-SG"
-  description = "Permite SSH solo desde la sede central"
+  description = "Permite trafico entre sucursal 1 y la sede central"
   vpc_id      = aws_vpc.sucursal_1.id
 
   ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["10.0.0.0/16"] # Sede Central
   }
   egress {
     from_port   = 0
@@ -76,16 +76,42 @@ resource "aws_security_group" "sucursal_1_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags = { Name = "Sucursal-1-SG" }
+  tags = { Name = "Sucursal-1-Access" }
 }
+
+# # ------------- DATA BLOCK para encontrar el peering -------------
+# data "aws_vpc_peering_connection" "sucursal_1_to_central" {
+#   filter {
+#     name   = "requester-vpc-info.vpc-id"
+#     values = [aws_vpc.sucursal_1.id] # ID de la VPC de la sucursal
+#   }
+#
+#   filter {
+#     name   = "accepter-vpc-info.vpc-id"
+#     values = [aws_vpc.sede_central.id] # ID de la VPC de la sede central
+#   }
+#
+#   filter {
+#     name   = "tag:Name"
+#     values = ["Sucursal-1-to-Sede-Central"]
+#   }
+# }
+
+# ---------- RUTA HACIA SEDE CENTRAL ----------
+# resource "aws_route" "sucursal_1_to_central" {
+#   route_table_id            = aws_route_table.sucursal_1_private_rt.id
+#   destination_cidr_block    = "10.0.0.0/16" # Sede Central
+#   vpc_peering_connection_id = data.aws_vpc_peering_connection.sucursal_1_to_central.id
+# }
 
 # ---------- INSTANCIAS PRIVADAS ----------
 resource "aws_instance" "sucursal_1_gerencia_ec2_az1" {
-  ami                    = "ami-0c94855ba95c71c99"
-  instance_type          = "t2.micro"
-  subnet_id              = aws_subnet.sucursal_1_gerencia_az1.id
-  vpc_security_group_ids = [aws_security_group.sucursal_1_sg.id]
-  key_name               = "bastion_key"
+  ami                         = "ami-0c94855ba95c71c99"
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.sucursal_1_gerencia_az1.id
+  vpc_security_group_ids      = [aws_security_group.sucursal_1_sg.id]
+  key_name                    = "bastion_key"
+  associate_public_ip_address = true
   tags = { Name = "Sucursal-1-Gerencia-EC2-AZ1" }
 }
 
@@ -97,4 +123,9 @@ resource "aws_instance" "sucursal_1_gerencia_ec2_az2" {
   key_name                    = "bastion_key"
   associate_public_ip_address = true
   tags = { Name = "Sucursal-1-Gerencia-EC2-AZ2" }
+}
+resource "aws_route" "sucursal_1_to_central" {
+  route_table_id            = aws_route_table.sucursal_1_private_rt.id
+  destination_cidr_block    = aws_vpc.sede_central.cidr_block
+  vpc_peering_connection_id = aws_vpc_peering_connection.sucursal_1_to_central.id
 }
