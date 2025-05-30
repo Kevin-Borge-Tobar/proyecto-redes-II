@@ -10,31 +10,31 @@ resource "aws_internet_gateway" "sucursal_2_igw" {
 }
 
 # Subredes para departamentos
-resource "aws_subnet" "gerencia" {
+resource "aws_subnet" "s2_gerencia" {
   vpc_id            = aws_vpc.sucursal_2.id
   cidr_block        = "10.20.10.0/24"
   availability_zone = "us-east-1a"
   tags = { Name = "Gerencia-Sucursal-2" }
 }
-resource "aws_subnet" "rrhh" {
+resource "aws_subnet" "s2_rrhh" {
   vpc_id            = aws_vpc.sucursal_2.id
   cidr_block        = "10.20.20.0/24"
   availability_zone = "us-east-1a"
   tags = { Name = "RRHH-Sucursal-2" }
 }
-resource "aws_subnet" "informatica" {
+resource "aws_subnet" "s2_informatica" {
   vpc_id            = aws_vpc.sucursal_2.id
   cidr_block        = "10.20.30.0/24"
   availability_zone = "us-east-1a"
   tags = { Name = "Informatica-Sucursal-2" }
 }
-resource "aws_subnet" "contabilidad" {
+resource "aws_subnet" "s2_contabilidad" {
   vpc_id            = aws_vpc.sucursal_2.id
   cidr_block        = "10.20.40.0/24"
   availability_zone = "us-east-1a"
   tags = { Name = "Contabilidad-Sucursal-2" }
 }
-resource "aws_subnet" "ventas" {
+resource "aws_subnet" "s2_ventas" {
   vpc_id            = aws_vpc.sucursal_2.id
   cidr_block        = "10.20.50.0/24"
   availability_zone = "us-east-1a"
@@ -48,28 +48,28 @@ resource "aws_route_table" "public_rt_sucursal_2" {
 }
 
 # Asociaciones
-resource "aws_route_table_association" "gerencia_assoc" {
-  subnet_id      = aws_subnet.gerencia.id
+resource "aws_route_table_association" "s2_gerencia_assoc" {
+  subnet_id      = aws_subnet.s2_gerencia.id
   route_table_id = aws_route_table.public_rt_sucursal_2.id
 }
-resource "aws_route_table_association" "rrhh_assoc" {
-  subnet_id      = aws_subnet.rrhh.id
+resource "aws_route_table_association" "s2_rrhh_assoc" {
+  subnet_id      = aws_subnet.s2_rrhh.id
   route_table_id = aws_route_table.public_rt_sucursal_2.id
 }
-resource "aws_route_table_association" "informatica_assoc" {
-  subnet_id      = aws_subnet.informatica.id
+resource "aws_route_table_association" "s2_informatica_assoc" {
+  subnet_id      = aws_subnet.s2_informatica.id
   route_table_id = aws_route_table.public_rt_sucursal_2.id
 }
-resource "aws_route_table_association" "contabilidad_assoc" {
-  subnet_id      = aws_subnet.contabilidad.id
+resource "aws_route_table_association" "s2_contabilidad_assoc" {
+  subnet_id      = aws_subnet.s2_contabilidad.id
   route_table_id = aws_route_table.public_rt_sucursal_2.id
 }
-resource "aws_route_table_association" "ventas_assoc" {
-  subnet_id      = aws_subnet.ventas.id
+resource "aws_route_table_association" "s2_ventas_assoc" {
+  subnet_id      = aws_subnet.s2_ventas.id
   route_table_id = aws_route_table.public_rt_sucursal_2.id
 }
 
-# Ruta para acceso a Internet (si quieres que tengan acceso)
+# Ruta para acceso a Internet
 resource "aws_route" "public_internet_access_sucursal_2" {
   route_table_id         = aws_route_table.public_rt_sucursal_2.id
   destination_cidr_block = "0.0.0.0/0"
@@ -106,46 +106,46 @@ resource "aws_security_group" "public_sg_sucursal_2" {
 }
 
 # Una instancia por subred (por departamento)
-resource "aws_instance" "gerencia_ec2" {
+resource "aws_instance" "s2_gerencia_ec2" {
   ami                         = "ami-0c94855ba95c71c99"
   instance_type               = "t2.micro"
-  subnet_id                   = aws_subnet.gerencia.id
+  subnet_id                   = aws_subnet.s2_gerencia.id
   vpc_security_group_ids      = [aws_security_group.public_sg_sucursal_2.id]
   key_name                    = "bastion_key"
   associate_public_ip_address = false
   tags = { Name = "Gerencia-EC2-Sucursal-2" }
 }
-resource "aws_instance" "rrhh_ec2" {
+resource "aws_instance" "s2_rrhh_ec2" {
   ami                         = "ami-0c94855ba95c71c99"
   instance_type               = "t2.micro"
-  subnet_id                   = aws_subnet.rrhh.id
+  subnet_id                   = aws_subnet.s2_rrhh.id
   vpc_security_group_ids      = [aws_security_group.public_sg_sucursal_2.id]
   key_name                    = "bastion_key"
   associate_public_ip_address = false
   tags = { Name = "RRHH-EC2-Sucursal-2" }
 }
-resource "aws_instance" "informatica_ec2" {
+resource "aws_instance" "s2_informatica_ec2" {
   ami                         = "ami-0c94855ba95c71c99"
   instance_type               = "t2.micro"
-  subnet_id                   = aws_subnet.informatica.id
+  subnet_id                   = aws_subnet.s2_informatica.id
   vpc_security_group_ids      = [aws_security_group.public_sg_sucursal_2.id]
   key_name                    = "bastion_key"
   associate_public_ip_address = false
   tags = { Name = "Informatica-EC2-Sucursal-2" }
 }
-resource "aws_instance" "contabilidad_ec2" {
+resource "aws_instance" "s2_contabilidad_ec2" {
   ami                         = "ami-0c94855ba95c71c99"
   instance_type               = "t2.micro"
-  subnet_id                   = aws_subnet.contabilidad.id
+  subnet_id                   = aws_subnet.s2_contabilidad.id
   vpc_security_group_ids      = [aws_security_group.public_sg_sucursal_2.id]
   key_name                    = "bastion_key"
   associate_public_ip_address = false
   tags = { Name = "Contabilidad-EC2-Sucursal-2" }
 }
-resource "aws_instance" "ventas_ec2" {
+resource "aws_instance" "s2_ventas_ec2" {
   ami                         = "ami-0c94855ba95c71c99"
   instance_type               = "t2.micro"
-  subnet_id                   = aws_subnet.ventas.id
+  subnet_id                   = aws_subnet.s2_ventas.id
   vpc_security_group_ids      = [aws_security_group.public_sg_sucursal_2.id]
   key_name                    = "bastion_key"
   associate_public_ip_address = false

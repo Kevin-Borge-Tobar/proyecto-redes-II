@@ -62,6 +62,19 @@ resource "aws_security_group" "public_sg" {
     cidr_blocks = ["0.0.0.0/0"]
     description = "Permite HTTPS desde cualquier lugar"
   }
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [
+      "10.10.0.0/16", # Sucursal 1
+      "10.20.0.0/16", # Sucursal 2
+      "10.30.0.0/16", # Sucursal 3
+      "10.40.0.0/16", # USA
+      "10.50.0.0/16"  # España
+    ]
+    description = "Permite ping desde sucursales"
+  }
   egress {
     from_port   = 0
     to_port     = 0
@@ -71,37 +84,76 @@ resource "aws_security_group" "public_sg" {
   tags = { Name = "Public-Access" }
 }
 
-# -------- INSTANCIA PUBLICA --------
-resource "aws_instance" "central_ec2" {
+# -------- INSTANCIAS POR DEPARTAMENTO Y PERIFÉRICOS (todas en la misma subred) --------
+resource "aws_instance" "gerencia_ec2" {
   ami                         = "ami-0c94855ba95c71c99"
   instance_type               = "t2.micro"
   subnet_id                   = aws_subnet.public_subnet_central.id
   vpc_security_group_ids      = [aws_security_group.public_sg.id]
   key_name                    = "bastion_key"
   associate_public_ip_address = true
-  tags = { Name = "Central-EC2" }
+  tags = { Name = "Gerencia-EC2-Sede-Central" }
+}
+resource "aws_instance" "rrhh_ec2" {
+  ami                         = "ami-0c94855ba95c71c99"
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.public_subnet_central.id
+  vpc_security_group_ids      = [aws_security_group.public_sg.id]
+  key_name                    = "bastion_key"
+  associate_public_ip_address = true
+  tags = { Name = "RRHH-EC2-Sede-Central" }
+}
+resource "aws_instance" "informatica_ec2" {
+  ami                         = "ami-0c94855ba95c71c99"
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.public_subnet_central.id
+  vpc_security_group_ids      = [aws_security_group.public_sg.id]
+  key_name                    = "bastion_key"
+  associate_public_ip_address = true
+  tags = { Name = "Informatica-EC2-Sede-Central" }
+}
+resource "aws_instance" "contabilidad_ec2" {
+  ami                         = "ami-0c94855ba95c71c99"
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.public_subnet_central.id
+  vpc_security_group_ids      = [aws_security_group.public_sg.id]
+  key_name                    = "bastion_key"
+  associate_public_ip_address = true
+  tags = { Name = "Contabilidad-EC2-Sede-Central" }
+}
+resource "aws_instance" "ventas_ec2" {
+  ami                         = "ami-0c94855ba95c71c99"
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.public_subnet_central.id
+  vpc_security_group_ids      = [aws_security_group.public_sg.id]
+  key_name                    = "bastion_key"
+  associate_public_ip_address = true
+  tags = { Name = "Ventas-EC2-Sede-Central" }
+}
+resource "aws_instance" "perifericos_ec2" {
+  ami                         = "ami-0c94855ba95c71c99"
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.public_subnet_central.id
+  vpc_security_group_ids      = [aws_security_group.public_sg.id]
+  key_name                    = "bastion_key"
+  associate_public_ip_address = true
+  tags = { Name = "Perifericos-EC2-Sede-Central" }
 }
 
-# --- (Peering y rutas para peering puedes agregarlas abajo si lo necesitas) ---
-
-# --- PEERING (lo puedes declarar aquí o en la sucursal, pero debe ser uno solo en todo el proyecto) ---
+# --- PEERING Y RUTAS HACIA TODAS LAS SUCURSALES ---
 resource "aws_vpc_peering_connection" "central_to_sucursal_1" {
   vpc_id        = aws_vpc.sede_central.id
   peer_vpc_id   = aws_vpc.sucursal_1.id
   auto_accept   = true
-  tags = {
-    Name = "Central-to-Sucursal-1"
-  }
+  tags = { Name = "Central-to-Sucursal-1" }
 }
 
-# --- RUTA en la central para alcanzar la sucursal 1 ---
 resource "aws_route" "central_to_sucursal_1" {
   route_table_id            = aws_route_table.public_rt.id
   destination_cidr_block    = aws_vpc.sucursal_1.cidr_block   # "10.10.0.0/16"
   vpc_peering_connection_id = aws_vpc_peering_connection.central_to_sucursal_1.id
 }
 
-# --- PEERING central <-> sucursal 2 ---
 resource "aws_vpc_peering_connection" "central_to_sucursal_2" {
   vpc_id        = aws_vpc.sede_central.id
   peer_vpc_id   = aws_vpc.sucursal_2.id
@@ -113,23 +165,32 @@ resource "aws_vpc_peering_connection" "central_to_sucursal_2" {
 
 # --- RUTA en la central para alcanzar la sucursal 2 ---
 resource "aws_route" "central_to_sucursal_2" {
-  route_table_id            = aws_route_table.public_rt.id
+  route_table_id            = aws_route_table.public_rt.id  # (O la que uses para la central)
   destination_cidr_block    = aws_vpc.sucursal_2.cidr_block   # "10.20.0.0/16"
   vpc_peering_connection_id = aws_vpc_peering_connection.central_to_sucursal_2.id
 }
 
+# Uncomment the following block if you want to include Sucursal 3
+# resource "aws_vpc_peering_connection" "central_to_sucursal_3" {
+#   vpc_id        = aws_vpc.sede_central.id
+#   peer_vpc_id   = aws_vpc.sucursal_3.id
+#   auto_accept   = true
+#   tags = { Name = "Central-to-Sucursal-3" }
+# }
+#
+# resource "aws_route" "central_to_sucursal_3" {
+#   route_table_id            = aws_route_table.public_rt.id
+#   destination_cidr_block    = aws_vpc.sucursal_3.cidr_block   # "10.30.0.0/16"
+#   vpc_peering_connection_id = aws_vpc_peering_connection.central_to_sucursal_3.id
+# }
 
-# Peering entre la sede central y sucursal USA
 resource "aws_vpc_peering_connection" "central_to_sucursal_usa" {
   vpc_id        = aws_vpc.sede_central.id
   peer_vpc_id   = aws_vpc.sucursal_usa.id
   auto_accept   = true
-  tags = {
-    Name = "Central-to-Sucursal-USA"
-  }
+  tags = { Name = "Central-to-Sucursal-USA" }
 }
 
-# Ruta en la central para alcanzar Sucursal USA
 resource "aws_route" "central_to_sucursal_usa" {
   route_table_id            = aws_route_table.public_rt.id
   destination_cidr_block    = aws_vpc.sucursal_usa.cidr_block   # "10.40.0.0/16"
@@ -140,9 +201,7 @@ resource "aws_vpc_peering_connection" "central_to_sucursal_espana" {
   vpc_id        = aws_vpc.sede_central.id
   peer_vpc_id   = aws_vpc.sucursal_espana.id
   auto_accept   = true
-  tags = {
-    Name = "Central-to-Sucursal-España"
-  }
+  tags = { Name = "Central-to-Sucursal-España" }
 }
 
 resource "aws_route" "central_to_sucursal_espana" {
@@ -150,18 +209,3 @@ resource "aws_route" "central_to_sucursal_espana" {
   destination_cidr_block    = aws_vpc.sucursal_espana.cidr_block   # "10.50.0.0/16"
   vpc_peering_connection_id = aws_vpc_peering_connection.central_to_sucursal_espana.id
 }
-
-# resource "aws_vpc_peering_connection" "central_to_sucursal_3" {
-#   vpc_id        = aws_vpc.sede_central.id
-#   peer_vpc_id   = aws_vpc.sucursal_3.id
-#   auto_accept   = true
-#   tags = {
-#     Name = "Central-to-Sucursal-3"
-#   }
-# }
-#
-# resource "aws_route" "central_to_sucursal_3" {
-#   route_table_id            = aws_route_table.public_rt.id
-#   destination_cidr_block    = aws_vpc.sucursal_3.cidr_block   # "10.30.0.0/16"
-#   vpc_peering_connection_id = aws_vpc_peering_connection.central_to_sucursal_3.id
-# }
